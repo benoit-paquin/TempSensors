@@ -15,9 +15,9 @@ int watchdog_counter = 0; // number of interrupt
 void blink (byte cnt) {
   for (byte i = 0; i<cnt; i++){
     digitalWrite(4,HIGH);
-    delay(60);
+    delay(120);
     digitalWrite(4,LOW);
-    delay(40);
+    delay(60);
   }
 }
 void init_temp() {
@@ -40,7 +40,6 @@ void setup()
   TinyWireM.begin();
   pinMode(4,OUTPUT);
   init_temp();
-  read_temp(&temp, &hum);
   GPIOInit();
   EPD_1in9_init();
   EPD_1in9_lut_5S(); // boot unit
@@ -51,6 +50,11 @@ void setup()
   delay(500);
   EPD_1in9_lut_DU_WB(); // black out screen
   EPD_1in9_sleep();
+  blink(3);
+  // display voltage at start
+  long vcc = readVcc()/100;
+  update_epaper(vcc,0,true,true);
+  delay(1000);
 }
 
 ISR(WDT_vect) {
