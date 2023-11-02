@@ -1,78 +1,89 @@
-//#include <AM232X.h>
+#include <avr/sleep.h> //Needed for sleep_mode
+#include <avr/wdt.h> //Needed to enable/disable watch dog timer
+
 #include <stdio.h>
-#include <Wire.h>
+#include <TinyWireM.h>
 #include "EPD_1in9.h"
+#include "DHT20.h"
+DHT20 DHT;
+float temp = 0.0;
+float hum = 0.0;
+float old_temp = -1.0;
+float old_hum = -1.0;
+int watchdog_counter = 0; // number of interrupt
+
 void blink (byte cnt) {
-  delay(200);
   for (byte i = 0; i<cnt; i++){
     digitalWrite(4,HIGH);
-    delay(200);
+    delay(60);
     digitalWrite(4,LOW);
-    delay(100);
+    delay(40);
   }
+}
+void init_temp() {
+  DHT.begin();
+}
+
+void read_temp(float *temp, float *hum){
+  int status = DHT.read();
+  while (status != DHT20_OK) {
+    delay(50);
+    status = DHT.read(); 
+  }
+  *temp = DHT.getTemperature();
+  *hum = DHT.getHumidity();
 }
 void setup()
 {
+  set_sleep_mode(SLEEP_MODE_PWR_DOWN); //Power down everything, wake up from WDT
+  sleep_enable();
+  TinyWireM.begin();
   pinMode(4,OUTPUT);
-  // put your setup code here, to run once:
-  blink(3);
-  Wire.begin();
+  init_temp();
+  read_temp(&temp, &hum);
   GPIOInit();
-  blink(1);
   EPD_1in9_init();
-  blink(2);
-  EPD_1in9_lut_5S();
-  blink(3);
-  EPD_1in9_Write_Screen(DSPNUM_1in9_off);
+  EPD_1in9_lut_5S(); // boot unit
+  EPD_1in9_Write_Screen(DSPNUM_1in9_off); // write all white
   delay(500);
   EPD_1in9_lut_GC();
   EPD_1in9_Write_Screen1(DSPNUM_1in9_on);
   delay(500);
-  EPD_1in9_Write_Screen(DSPNUM_1in9_off);
-  delay(500);
-  EPD_1in9_lut_DU_WB();
-  EPD_1in9_Write_Screen(DSPNUM_1in9_W0);
-  delay(500);
-  EPD_1in9_Write_Screen(DSPNUM_1in9_W1);
-  delay(500);
-  EPD_1in9_Write_Screen(DSPNUM_1in9_W2);
-  delay(500);
-  EPD_1in9_Write_Screen(DSPNUM_1in9_W3);
-  delay(500);
-  EPD_1in9_Write_Screen(DSPNUM_1in9_W4);
-  delay(500);
-  EPD_1in9_Write_Screen(DSPNUM_1in9_W5);
-  delay(500);
-  EPD_1in9_Write_Screen(DSPNUM_1in9_W6);
-  delay(500);
-  EPD_1in9_Write_Screen(DSPNUM_1in9_W7);
-  delay(500);
-  EPD_1in9_Write_Screen(DSPNUM_1in9_W8);
-  delay(500);
-  EPD_1in9_Write_Screen(DSPNUM_1in9_W9);
-  delay(500);
-  EPD_1in9_Write_Screen(DSPNUM_1in9_WB);
-  delay(500);
-
+  EPD_1in9_lut_DU_WB(); // black out screen
   EPD_1in9_sleep();
-
-  delay(1000);
-  update_epaper(123.4, 34.5, true, false);
-  Wire.end();
 }
 
+ISR(WDT_vect) {
+  watchdog_counter++;
+}
 
 void loop()
-{
-
+{ 
+  if (0 == watchdog_counter % 4) {
+    long vcc = readVcc();
+    bool high_bat = false;
+    bool low_bat = false;
+    high_bat = (vcc>3800);
+    low_bat = (vcc<3200);
+    if (vcc > 3800) {}
+    read_temp(&temp, &hum);
+    if (old_temp != temp || old_hum != hum){
+      update_epaper(temp, hum , high_bat, low_bat);
+      old_temp = temp;
+      old_hum = hum;
+    }
+    if (hum < 40 || hum> 60) {
+      blink((abs(50-hum)/10));
+    }
+  }
+  setup_watchdog(9); //Setup watchdog to go off after 8sec
+  sleep_mode(); //Go to sleep! Wake up 8 sec later
 }
 //---------epaper driver, credit to upiir
 char digit_left[] = {0xbf, 0x00, 0xfd, 0xf5, 0x47, 0xf7, 0xff, 0x21, 0xff, 0xf7, 0x00};  // individual segments for the left part od the digit, index 10 is empty
 char digit_right[] ={0x1f, 0x1f, 0x17, 0x1f, 0x1f, 0x1d, 0x1d, 0x1f, 0x1f, 0x1f, 0x00};  // individual segments for the right part od the digit, index 10 is empty
 char temp_dig[] = {1, 2, 3, 4}; // temperature digits > 1, 2, 3, 4 = 123.4°C
 char hum_dig[] = {5, 6, 7}; // humidity digits > 5, 6, 7 = 56.7%
-float temp = 1.2; // temperature value - will be used from the sensor
-float hum = 3.4; // humidity value - will be used from the sensor
 unsigned char eink_segments[]  = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,};  // all white, updated later
 
 void update_epaper(float temp, float hum, bool high_bat, bool low_bat) {
@@ -87,8 +98,8 @@ void update_epaper(float temp, float hum, bool high_bat, bool low_bat) {
   hum_dig[1] = int(hum ) % 10;
   hum_dig[2] = int(hum * 10) % 10;
   // update display
-  EPD_1in9_lut_5S(); // boot unit to remove ghosting
-  EPD_1in9_Write_Screen(DSPNUM_1in9_off); //write all whites
+  //EPD_1in9_lut_5S(); // boot unit to remove ghosting
+  //EPD_1in9_Write_Screen(DSPNUM_1in9_off); //write all whites
   delay(500);
   EPD_1in9_lut_GC();
   EPD_1in9_lut_DU_WB();
@@ -118,4 +129,36 @@ void update_epaper(float temp, float hum, bool high_bat, bool low_bat) {
   // write segments to the e-ink screen
   EPD_1in9_Write_Screen(eink_segments);
   EPD_1in9_sleep();
+}
+
+long readVcc() {
+  // Read 1.1V reference against AVcc
+  // set the reference to Vcc and the measurement to the internal 1.1V reference
+  #if defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+    ADMUX = _BV(REFS0) | _BV(MUX4) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1);
+  #elif defined (__AVR_ATtiny24__) || defined(__AVR_ATtiny44__) || defined(__AVR_ATtiny84__)
+    ADMUX = _BV(MUX5) | _BV(MUX0);
+  #elif defined (__AVR_ATtiny25__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtiny85__)
+    ADMUX = _BV(MUX3) | _BV(MUX2);
+  #else
+    ADMUX = _BV(REFS0) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1);
+  #endif  
+  delay(2); // Wait for Vref to settle
+  ADCSRA |= _BV(ADSC); // Start conversion
+  while (bit_is_set(ADCSRA,ADSC)); // measuring
+  uint8_t low  = ADCL; // must read ADCL first - it then locks ADCH  
+  uint8_t high = ADCH; // unlocks both
+  long result = (high<<8) | low;
+  result = 1125300L / result; // Calculate Vcc (in mV); 1125300 = 1.1*1023*1000
+  return result; // Vcc in millivolts
+}
+void setup_watchdog(int timerPrescaler) {
+  if (timerPrescaler > 9 ) timerPrescaler = 9; //Limit incoming amount to legal settings
+  byte bb = timerPrescaler & 7; 
+  if (timerPrescaler > 7) bb |= (1<<5); //Set the special 5th bit if necessary
+  //This order of commands is important and cannot be combined
+  MCUSR &= ~(1<<WDRF); //Clear the watch dog reset
+  WDTCR |= (1<<WDCE) | (1<<WDE); //Set WD_change enable, set WD enable
+  WDTCR = bb; //Set new watchdog timeout value
+  WDTCR |= _BV(WDIE); //Set the interrupt enable, this will keep unit from resetting after each int
 }

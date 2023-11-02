@@ -2,7 +2,7 @@
 #define _EPD_1in9_H_
 
 #include <Arduino.h>
-#include <Wire.h>
+#include <TinyWireM.h>
 #include <stdlib.h>
 // address
 #define adds_com    0x3C

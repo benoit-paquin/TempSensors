@@ -1,4 +1,4 @@
-#include <Wire.h>
+#include <TinyWireM.h>
 #include <stdlib.h>
 #include "EPD_1in9.h"
 
@@ -53,9 +53,9 @@ parameter:
 ******************************************************************************/
 void EPD_1in9_SendCommand(unsigned char Reg)
 {
-  Wire.beginTransmission(adds_com);
-  Wire.write(Reg);
-  Wire.endTransmission(false);
+  TinyWireM.beginTransmission(adds_com);
+  TinyWireM.write(Reg);
+  TinyWireM.endTransmission(false);
 }
 
 /******************************************************************************
@@ -65,9 +65,9 @@ parameter:
 ******************************************************************************/
 void EPD_1in9_SendData(unsigned char Data)
 {
-    Wire.beginTransmission(adds_data);
-  Wire.write(Data);
-  Wire.endTransmission();
+    TinyWireM.beginTransmission(adds_data);
+  TinyWireM.write(Data);
+  TinyWireM.endTransmission();
 }
 
 /******************************************************************************
@@ -78,11 +78,11 @@ parameter:
 unsigned char EPD_1in9_readCommand(unsigned char Reg)
 {
   unsigned char a;
-  Wire.beginTransmission(adds_com);
+  TinyWireM.beginTransmission(adds_com);
   delay(10);
-  Wire.write(Reg);
-  a = Wire.read();
-  Wire.endTransmission();
+  TinyWireM.write(Reg);
+  a = TinyWireM.read();
+  TinyWireM.endTransmission();
   return a;
 }
 
@@ -94,11 +94,11 @@ parameter:
 unsigned char EPD_1in9_readData(unsigned char Data)
 {
   unsigned char a;
-    Wire.beginTransmission(adds_data);
+    TinyWireM.beginTransmission(adds_data);
   delay(10);
-  Wire.write(Data);
-  a = Wire.read();
-  Wire.endTransmission();
+  TinyWireM.write(Data);
+  a = TinyWireM.read();
+  TinyWireM.endTransmission();
   return a;
 }
 
@@ -126,15 +126,15 @@ void EPD_1in9_ReadBusy(void)
 */
 void EPD_1in9_lut_DU_WB(void)
 {
-  Wire.beginTransmission(adds_com);
-  Wire.write(0x82);
-  Wire.write(0x80);
-  Wire.write(0x00);
-  Wire.write(0xC0);
-  Wire.write(0x80);
-  Wire.write(0x80);
-  Wire.write(0x62);
-  Wire.endTransmission();
+  TinyWireM.beginTransmission(adds_com);
+  TinyWireM.write(0x82);
+  TinyWireM.write(0x80);
+  TinyWireM.write(0x00);
+  TinyWireM.write(0xC0);
+  TinyWireM.write(0x80);
+  TinyWireM.write(0x80);
+  TinyWireM.write(0x62);
+  TinyWireM.endTransmission();
 }
 
 /*   
@@ -143,15 +143,15 @@ void EPD_1in9_lut_DU_WB(void)
 */
 void EPD_1in9_lut_GC(void)
 {
-  Wire.beginTransmission(adds_com);
-  Wire.write(0x82);
-  Wire.write(0x20);
-  Wire.write(0x00);
-  Wire.write(0xA0);
-  Wire.write(0x80);
-  Wire.write(0x40);
-  Wire.write(0x63);
-  Wire.endTransmission();
+  TinyWireM.beginTransmission(adds_com);
+  TinyWireM.write(0x82);
+  TinyWireM.write(0x20);
+  TinyWireM.write(0x00);
+  TinyWireM.write(0xA0);
+  TinyWireM.write(0x80);
+  TinyWireM.write(0x40);
+  TinyWireM.write(0x63);
+  TinyWireM.endTransmission();
 }
 
 /* 
@@ -160,15 +160,15 @@ void EPD_1in9_lut_GC(void)
 */
 void EPD_1in9_lut_5S(void)
 {
-  Wire.beginTransmission(adds_com);
-  Wire.write(0x82);
-  Wire.write(0x28);
-  Wire.write(0x20);
-  Wire.write(0xA8);
-  Wire.write(0xA0);
-  Wire.write(0x50);
-  Wire.write(0x65);
-  Wire.endTransmission(); 
+  TinyWireM.beginTransmission(adds_com);
+  TinyWireM.write(0x82);
+  TinyWireM.write(0x28);
+  TinyWireM.write(0x20);
+  TinyWireM.write(0xA8);
+  TinyWireM.write(0xA0);
+  TinyWireM.write(0x50);
+  TinyWireM.write(0x65);
+  TinyWireM.endTransmission(); 
 }
 
 /*
@@ -178,38 +178,38 @@ void EPD_1in9_lut_5S(void)
 */
 void EPD_1in9_Temperature(void)
 {
-  Wire.beginTransmission(adds_com);
+  TinyWireM.beginTransmission(adds_com);
   if( VAR_Temperature < 10 )
   {
-    Wire.write(0x7E);
-    Wire.write(0x81);
-    Wire.write(0xB4);
+    TinyWireM.write(0x7E);
+    TinyWireM.write(0x81);
+    TinyWireM.write(0xB4);
   }
   else
   {
-    Wire.write(0x7E);
-    Wire.write(0x81);
-    Wire.write(0xB4);
+    TinyWireM.write(0x7E);
+    TinyWireM.write(0x81);
+    TinyWireM.write(0xB4);
   }
-  Wire.endTransmission();
+  TinyWireM.endTransmission();
 
     delay(10);        
 
-  Wire.beginTransmission(adds_com);
-  Wire.write(0xe7);    // Set default frame time
+  TinyWireM.beginTransmission(adds_com);
+  TinyWireM.write(0xe7);    // Set default frame time
         
   // Set default frame time
   if(VAR_Temperature<5)
-    Wire.write(0x31); // 0x31  (49+1)*20ms=1000ms
+    TinyWireM.write(0x31); // 0x31  (49+1)*20ms=1000ms
   else if(VAR_Temperature<10)
-    Wire.write(0x22); // 0x22  (34+1)*20ms=700ms
+    TinyWireM.write(0x22); // 0x22  (34+1)*20ms=700ms
   else if(VAR_Temperature<15)
-    Wire.write(0x18); // 0x18  (24+1)*20ms=500ms
+    TinyWireM.write(0x18); // 0x18  (24+1)*20ms=500ms
   else if(VAR_Temperature<20)
-    Wire.write(0x13); // 0x13  (19+1)*20ms=400ms
+    TinyWireM.write(0x13); // 0x13  (19+1)*20ms=400ms
   else
-    Wire.write(0x0e); // 0x0e  (14+1)*20ms=300ms
-  Wire.endTransmission();
+    TinyWireM.write(0x0e); // 0x0e  (14+1)*20ms=300ms
+  TinyWireM.endTransmission();
 }
 
 /*
@@ -222,16 +222,16 @@ void EPD_1in9_init(void)
   EPD_1in9_Reset();
   delay(100);
 
-  Wire.beginTransmission(adds_com);
-  Wire.write(0x2B); // POWER_ON
-  Wire.endTransmission();
+  TinyWireM.beginTransmission(adds_com);
+  TinyWireM.write(0x2B); // POWER_ON
+  TinyWireM.endTransmission();
 
   delay(10);
 
-  Wire.beginTransmission(adds_com);
-  Wire.write(0xA7); // boost
-  Wire.write(0xE0); // TSON 
-  Wire.endTransmission();
+  TinyWireM.beginTransmission(adds_com);
+  TinyWireM.write(0xA7); // boost
+  TinyWireM.write(0xE0); // TSON 
+  TinyWireM.endTransmission();
 
   delay(10);
 
@@ -240,79 +240,79 @@ void EPD_1in9_init(void)
 
 void EPD_1in9_Write_Screen( unsigned char *image)
 {
-  Wire.beginTransmission(adds_com);
-  Wire.write(0xAC); // Close the sleep
-  Wire.write(0x2B); // turn on the power
-  Wire.write(0x40); // Write RAM address
-  Wire.write(0xA9); // Turn on the first SRAM
-  Wire.write(0xA8); // Shut down the first SRAM
-  Wire.endTransmission();
+  TinyWireM.beginTransmission(adds_com);
+  TinyWireM.write(0xAC); // Close the sleep
+  TinyWireM.write(0x2B); // turn on the power
+  TinyWireM.write(0x40); // Write RAM address
+  TinyWireM.write(0xA9); // Turn on the first SRAM
+  TinyWireM.write(0xA8); // Shut down the first SRAM
+  TinyWireM.endTransmission();
 
-  Wire.beginTransmission(adds_data);
+  TinyWireM.beginTransmission(adds_data);
   for(char j = 0 ; j<15 ; j++ )
-    Wire.write(image[j]);
+    TinyWireM.write(image[j]);
 
-  Wire.write(0x00);
-  Wire.endTransmission();
+  TinyWireM.write(0x00);
+  TinyWireM.endTransmission();
 
 
-  Wire.beginTransmission(adds_com);
-  Wire.write(0xAB); // Turn on the second SRAM
-  Wire.write(0xAA); // Shut down the second SRAM
-  Wire.write(0xAF); // display on
-  Wire.endTransmission();
+  TinyWireM.beginTransmission(adds_com);
+  TinyWireM.write(0xAB); // Turn on the second SRAM
+  TinyWireM.write(0xAA); // Shut down the second SRAM
+  TinyWireM.write(0xAF); // display on
+  TinyWireM.endTransmission();
 
   EPD_1in9_ReadBusy();
   //delay(2000);
   
-  Wire.beginTransmission(adds_com);
-  Wire.write(0xAE); // display off
-  Wire.write(0x28); // HV OFF
-  Wire.write(0xAD); // sleep in 
-  Wire.endTransmission();
+  TinyWireM.beginTransmission(adds_com);
+  TinyWireM.write(0xAE); // display off
+  TinyWireM.write(0x28); // HV OFF
+  TinyWireM.write(0xAD); // sleep in 
+  TinyWireM.endTransmission();
 }
 
 void EPD_1in9_Write_Screen1( unsigned char *image)
 {
-  Wire.beginTransmission(adds_com);
-  Wire.write(0xAC); // Close the sleep
-  Wire.write(0x2B); // turn on the power
-  Wire.write(0x40); // Write RAM address
-  Wire.write(0xA9); // Turn on the first SRAM
-  Wire.write(0xA8); // Shut down the first SRAM
-  Wire.endTransmission();
+  TinyWireM.beginTransmission(adds_com);
+  TinyWireM.write(0xAC); // Close the sleep
+  TinyWireM.write(0x2B); // turn on the power
+  TinyWireM.write(0x40); // Write RAM address
+  TinyWireM.write(0xA9); // Turn on the first SRAM
+  TinyWireM.write(0xA8); // Shut down the first SRAM
+  TinyWireM.endTransmission();
 
-  Wire.beginTransmission(adds_data);
+  TinyWireM.beginTransmission(adds_data);
   for(char j = 0 ; j<15 ; j++ )
-    Wire.write(image[j]);
+    TinyWireM.write(image[j]);
 
-  Wire.write(0x03);
-  Wire.endTransmission();
+  TinyWireM.write(0x03);
+  TinyWireM.endTransmission();
 
-  Wire.beginTransmission(adds_com);
-  Wire.write(0xAB); // Turn on the second SRAM
-  Wire.write(0xAA); // Shut down the second SRAM
-  Wire.write(0xAF); // display on
-  Wire.endTransmission();
+  TinyWireM.beginTransmission(adds_com);
+  TinyWireM.write(0xAB); // Turn on the second SRAM
+  TinyWireM.write(0xAA); // Shut down the second SRAM
+  TinyWireM.write(0xAF); // display on
+  TinyWireM.endTransmission();
 
   EPD_1in9_ReadBusy();
   //delay(2000);
 
-  Wire.beginTransmission(adds_com);
-  Wire.write(0xAE); // display off
-  Wire.write(0x28); // HV OFF
-  Wire.write(0xAD); // sleep in 
-  Wire.endTransmission();
+  TinyWireM.beginTransmission(adds_com);
+  TinyWireM.write(0xAE); // display off
+  TinyWireM.write(0x28); // HV OFF
+  TinyWireM.write(0xAD); // sleep in 
+  TinyWireM.endTransmission();
 
 }
 
 void EPD_1in9_sleep(void)
 {
-  Wire.beginTransmission(adds_com);
-  Wire.write(0x28); // POWER_OFF
+  TinyWireM.beginTransmission(adds_com);
+  TinyWireM.write(0x28); // POWER_OFF
   EPD_1in9_ReadBusy();
-  Wire.write(0xAD); // DEEP_SLEEP
-  Wire.endTransmission();
+  TinyWireM.write(0xAD); // DEEP_SLEEP
+  TinyWireM.endTransmission();
 
   delay(2000);
   // digitalWrite(EPD_RST_PIN, 0);
