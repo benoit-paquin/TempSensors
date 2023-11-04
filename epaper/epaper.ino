@@ -18,14 +18,17 @@ float old_temp = -1.0; // only update display if the temp changed.
 float old_hum = -1.0;
 int watchdog_counter = 0; // number of interrupt
 // ---- Utilities
-void blink (byte cnt) {
+void blink (bool green, byte cnt) {
   // blink led cnt time.
-  for (byte i = 0; i<cnt; i++){
-    digitalWrite(4,HIGH);
+  
+  for (byte i = 0; i<3*cnt; i++){
+    pinMode(4,OUTPUT);
+    digitalWrite(4,green ? HIGH : LOW);
     delay(120);
-    digitalWrite(4,LOW);
+    pinMode(4,INPUT);
     delay(60);
   }
+  
 }
 
 void init_temp() {
@@ -64,10 +67,10 @@ void setup()
   set_sleep_mode(SLEEP_MODE_PWR_DOWN); //Power down everything, wake up from WDT
   sleep_enable();
   TinyWireM.begin();
-  pinMode(4,OUTPUT); // Led
+  pinMode(4,INPUT); // 2-Led with 1 GPIO pin. 
   init_temp();
   init_epaper();
-  blink(3);
+  blink(true, 3);
   // display 10 x voltage at start. 3.45 V will show as 34.5C celcius
   update_epaper((float)readVcc()/100.0,0,true,true);
   delay(1000); // Leave VCC 
@@ -92,10 +95,12 @@ void loop()
       old_temp = temp;
       old_hum = hum;
     }
-    if (hum < 40 || hum> 60) { //blink 1-2-3 or 4 times if humidity is too low/high.
-      blink((abs(50-hum)/10));
-    }
   }
+  if (hum < 40 || hum> 60) { //blink 1-2-3 or 4 times if humidity is too low/high.
+    blink(false, (abs(50-hum)/10));
+    } else {
+      blink(true,1);
+    }
   setup_watchdog(9); //Setup watchdog to go off after 8sec
   sleep_mode(); //Go to sleep! Wake up 8 sec later
 }
