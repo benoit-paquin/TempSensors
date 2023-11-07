@@ -20,8 +20,8 @@ int watchdog_counter = 0; // number of interrupt
 // ---- Utilities
 void blink (bool green, byte cnt) {
   // blink led cnt time.
-  
-  for (byte i = 0; i<3*cnt; i++){
+  cnt = green ? cnt : 3*cnt;
+  for (byte i = 0; i < cnt; i++){
     pinMode(4,OUTPUT);
     digitalWrite(4,green ? HIGH : LOW);
     delay(120);
@@ -82,6 +82,9 @@ ISR(WDT_vect) { // called everytime the watchdog timer wakes up the CPU
 
 void loop()
 { 
+  if(4999 == watchdog_counter % 5000) { // reset epaper twice a day.
+    init_epaper();
+  }
   if (0 == watchdog_counter % 4) { // only update temp or screen every 9 seconds *4;
     // determine battery state
     long vcc = readVcc(); 
